@@ -17,8 +17,11 @@ public class DriverFactory {
     private static ThreadLocal<WebDriver> driver = new ThreadLocal<>();
 
     public static void initDriver(String platform) throws Exception {
-
-        log.info("🚀 INITIALIZING EXECUTION ON PLATFORM: [{}]", platform.toUpperCase());
+        if (platform == null) {
+        throw new RuntimeException("❌ FATAL: Platform property is null! Check your Maven -Dplatform flag.");
+    }
+    platform = platform.toLowerCase().trim();
+    log.info("🚀 INITIALIZING FOR PLATFORM: " + platform);
         if (platform.equalsIgnoreCase("web")) {
             log.info("🌐 Setting up Chrome Browser...");
             ChromeOptions options = new ChromeOptions();
