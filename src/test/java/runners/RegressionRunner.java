@@ -1,2 +1,4 @@
-package runners;public class RegressionRunner {
+package runners;
+
+public class RegressionRunner {
 }

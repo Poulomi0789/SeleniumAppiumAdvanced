@@ -1,2 +1,4 @@
-package utils;public class RetryAnalyzer {
+package utils;
+
+public class RetryAnalyzer {
 }
