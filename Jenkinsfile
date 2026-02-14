@@ -49,6 +49,8 @@ pipeline {
         stage('UI Automation Execution') {
             steps {
                 script {
+                    echo "Target Platform: ${params.PLATFORM}"
+                    echo "Target Environment: ${params.ENVIRONMENT}"
                     try {
                         sh "mvn clean test -e -Dplatform=${params.PLATFORM} -Denv=${params.ENVIRONMENT} -Ddataproviderthreadcount=${params.THREADS}"
                     } catch (Exception e) {
