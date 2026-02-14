@@ -33,23 +33,24 @@ public class DriverFactory {
             // Android App Settings
             log.info("🤖 Connecting to Android Device/Emulator via Appium...");
             UiAutomator2Options options = new UiAutomator2Options()
-                    .setDeviceName("Android_Emulator")
-                    .setApp(System.getProperty("user.dir") + "/apps/saucedemo.apk")
+                    .setDeviceName("Android Device")
+                    .withBrowserName("Chrome")
                     .setAutomationName("UiAutomator2");
+            // .setApp(System.getProperty("user.dir") + "/apps/saucedemo.apk")
 
             driver.set(new AndroidDriver(new URL("http://127.0.0.1:4723"), options));
-            log.info("✅ Android Session created. App: SwagLabs");
+            log.info("✅ Android Session created. Mobile App: SwagLabs");
 
         } else if (platform.equalsIgnoreCase("ios")) {
             // iOS App Settings
             log.info("🤖 Connecting to iOS Device/Emulator via Appium...");
             XCUITestOptions options = new XCUITestOptions()
                     .setDeviceName("iPhone 15")
-                    .setApp(System.getProperty("user.dir") + "/apps/saucedemo.app")
+                    .withBrowserName("Safari")
                     .setAutomationName("XCUITest");
-
+            //.setApp(System.getProperty("user.dir") + "/apps/saucedemo.app")
             driver.set(new IOSDriver(new URL("http://127.0.0.1:4723"), options));
-            log.info("✅ iOS Session created. App: SwagLabs");
+            log.info("✅ iOS Session created. Mobile App: SwagLabs");
         }
 
         driver.get().manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
