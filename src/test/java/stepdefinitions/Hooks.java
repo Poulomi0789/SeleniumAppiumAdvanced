@@ -19,7 +19,8 @@ public class Hooks {
     public void setup() throws Exception {
         // Read from Maven command line: -Dplatform=android
         String platform = System.getProperty("platform");
-        System.out.println("DEBUG: Platform detected is: " + platform);
+        Allure.parameter("Platform", platform.toUpperCase());
+        System.out.println("LOG: Framework is starting on " + platform);
         DriverFactory.initDriver(platform);
     }
 
