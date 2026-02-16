@@ -30,16 +30,32 @@ public class DriverFactory {
             log.info("✅ Chrome Browser is up and running.");
 
         } else if (platform.equalsIgnoreCase("android")) {
-            // Android App Settings
-            log.info("🤖 Connecting to Android Device/Emulator via Appium...");
-            UiAutomator2Options options = new UiAutomator2Options()
-                    .setDeviceName("Android Device")
-                    .withBrowserName("Chrome")
-                    .setAutomationName("UiAutomator2");
-            // .setApp(System.getProperty("user.dir") + "/apps/saucedemo.apk")
+            // // Android App Settings
+            // log.info("🤖 Connecting to Android Device/Emulator via Appium...");
+            // UiAutomator2Options options = new UiAutomator2Options()
+            //         .setDeviceName("Android Device")
+            //         .withBrowserName("Chrome")
+            //         .setAutomationName("UiAutomator2");
+            // // .setApp(System.getProperty("user.dir") + "/apps/saucedemo.apk")
 
-            driver.set(new AndroidDriver(new URL("http://127.0.0.1:4723"), options));
+            // driver.set(new AndroidDriver(new URL("http://127.0.0.1:4723"), options));
+            // log.info("✅ Android Session created. Mobile App: SwagLabs");
+
+//************************************************************************************
+            // For Local Execution (Running from IntelliJ on the same machine)
+            //String appiumUrl = "http://localhost:4723/wd/hub";
+            // OR: For Jenkins Execution (Jenkins and Android are in the same Docker network)
+            String appiumUrl = "http://android-container:4723/wd/hub";
+
+            UiAutomator2Options options = new UiAutomator2Options()
+                    .setDeviceName("Samsung Galaxy S10")
+                    .setAutomationName("UiAutomator2")
+                    .withBrowserName("Chrome") // This opens Mobile Chrome
+                    .setNoReset(true);
+
+            driver.set(new AndroidDriver(new URL(appiumUrl), options));
             log.info("✅ Android Session created. Mobile App: SwagLabs");
+            
 
         } else if (platform.equalsIgnoreCase("ios")) {
             // iOS App Settings
