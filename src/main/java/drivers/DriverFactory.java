@@ -48,10 +48,12 @@ public class DriverFactory {
             String appiumUrl = "http://android-container:4723/wd/hub";
 
             UiAutomator2Options options = new UiAutomator2Options()
+                    .setPlatformName("Android")
                     .setDeviceName("Samsung Galaxy S10")
                     .setAutomationName("UiAutomator2")
                     .withBrowserName("Chrome") // This opens Mobile Chrome
-                    .setNoReset(true);
+                    .setNoReset(true)
+                    .setFullReset(false);
 
             driver.set(new AndroidDriver(new URL(appiumUrl), options));
             log.info("✅ Android Session created. Mobile App: SwagLabs");
