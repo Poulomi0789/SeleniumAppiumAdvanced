@@ -28,20 +28,23 @@ pipeline {
         }
 
         stage('UI Automation Execution') {
-            steps {
-                // FIX: Use the 'browserstack' step provided by the plugin 
-                // This automatically sets BROWSERSTACK_USERNAME and BROWSERSTACK_ACCESS_KEY
-                browserstack(credentialsId: 'browserstack_creds') {
-                    script {
-                        try {
-                            sh "mvn clean test -e -Dplatform=${params.PLATFORM} -Denv=${params.ENVIRONMENT} -Dcucumber.filter.tags=${params.TAGS} -Ddataproviderthreadcount=${params.THREADS}"
-                        } catch (Exception e) {
-                            currentBuild.result = 'UNSTABLE'
-                        }
-                    }
+       stage('UI Automation Execution') {
+    steps {
+        // This credentialsId must match the ID you created in Jenkins
+        browserstack(credentialsId: 'browserstack_creds') {
+            script {
+                // The browserstack plugin provides BS_USER and BS_KEY automatically
+                // We must map them to the names your DriverFactory expects
+                withEnv([
+                    "BROWSERSTACK_USERNAME=${env.BROWSERSTACK_USER}",
+                    "BROWSERSTACK_ACCESS_KEY=${env.BROWSERSTACK_ACCESS_KEY}"
+                ]) {
+                    sh "mvn clean test -Dplatform=${params.PLATFORM} -Denv=${params.ENVIRONMENT} -Dcucumber.filter.tags=${params.TAGS}"
                 }
             }
         }
+    }
+}
 
         stage('Reports') {
             steps {
