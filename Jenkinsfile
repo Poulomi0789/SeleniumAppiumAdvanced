@@ -10,59 +10,71 @@ pipeline {
         choice(
             name: 'ENVIRONMENT',
             choices: ['qa', 'dev', 'prod'],
-            description: 'Select which environment properties file to use'
+            description: 'Select the target environment properties'
         )
 
         string(
             name: 'THREADS',
             defaultValue: '2',
-            description: 'How many browser instances to run at once'
+            description: 'Number of parallel thread execution'
         )
 
         choice(
             name: 'TAGS',
             choices: ['@smoke', '@regression', '@all'],
-            description: 'Filter which scenarios to run'
+            description: 'Filter scenarios by Cucumber tags'
         )
+
         choice(
             name: 'PLATFORM',
             choices: ['web', 'android', 'ios'],
-            description: 'Platform to test')
+            description: 'Target platform: Web (Local) or Mobile (BrowserStack)'
+        )
     }
 
     environment {
         ALLURE_RESULTS = 'target/allure-results'
-        GIT_URL = 'https://github.com/Poulomi0789/SeleniumCucumberAdvanced.git'
-        GIT_BRANCH = 'main'
         EMAIL_RECIPIENTS = 'poulomidas89@gmail.com'
+
+        /* * Securely link the Jenkins Credential 'browserstack_creds'
+         * to the Environment Variables used in DriverFactory.java
+         */
+        BS_CRED = credentials('browserstack_creds')
+        BROWSERSTACK_USERNAME = "${env.BS_CRED_USR}"
+        BROWSERSTACK_ACCESS_KEY = "${env.BS_CRED_PSW}"
     }
 
     stages {
-
-        stage('Checkout') {
+        stage('Initialize & Checkout') {
             steps {
                 cleanWs()
                 checkout scm
+                echo "🚀 Execution Started: Platform=${params.PLATFORM} | Env=${params.ENVIRONMENT}"
             }
         }
 
-        stage('UI Automation Execution') {
+        stage('Automation Execution') {
             steps {
                 script {
-                    echo "Target Platform: ${params.PLATFORM}"
-                    echo "Target Environment: ${params.ENVIRONMENT}"
                     try {
-                        sh "mvn clean test -e -Dplatform=${params.PLATFORM} -Denv=${params.ENVIRONMENT} -Ddataproviderthreadcount=${params.THREADS}"
+                        // -Dcucumber.filter.tags is used to pass the TAGS parameter to the Runner
+                        sh "mvn clean test -e " +
+                           "-Dplatform=${params.PLATFORM} " +
+                           "-Denv=${params.ENVIRONMENT} " +
+                           "-Dcucumber.filter.tags=${params.TAGS} " +
+                           "-Ddataproviderthreadcount=${params.THREADS}"
                     } catch (Exception e) {
-                        currentBuild.result = 'FAILURE'
-                        echo "Tests failed, proceeding to report generation..."
+                        // Mark build as Unstable so report generation still triggers
+                        currentBuild.result = 'UNSTABLE'
+                        echo "⚠️ Some tests failed. Generating report..."
                     }
                 }
             }
         }
 
-        stage('Generate & Zip Report') {
+        stage('Report Generation') {
             steps {
+                // Generates Allure Static HTML from results
                 sh 'mvn io.qameta.allure:allure-maven:report'
 
                 script {
@@ -70,49 +82,32 @@ pipeline {
                         zip zipFile: 'allure-report.zip',
                             dir: 'target/site/allure-maven-plugin',
                             archive: true
-                    } else {
-                        echo "Warning: Allure report directory not found, skipping zip."
                     }
                 }
             }
         }
 
-        stage('Publish to Jenkins') {
+        stage('Publish Reports') {
             steps {
-                allure includeProperties: false, results: [
-                    [path: 'target/allure-results']
-                ]
+                allure includeProperties: false, results: [[path: 'target/allure-results']]
             }
         }
     }
 
     post {
-
         always {
-            archiveArtifacts artifacts: '**/*.log', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'target/*.log', allowEmptyArchive: true
             junit testResults: '**/target/surefire-reports/*.xml', allowEmptyResults: true
         }
 
         success {
             emailext(
-                subject: "✅ Selenium Cucumber Tests Passed | ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                subject: "✅ PASSED: ${env.JOB_NAME} [${params.PLATFORM}] #${env.BUILD_NUMBER}",
                 body: """<h2>Build Successful 🚀</h2>
-                         <b>Environment:</b> ${params.ENVIRONMENT} <br>
-                         <b>Tags Run:</b> ${params.TAGS} <br>
-                         <b>Allure Report:</b> <a href="${env.BUILD_URL}allure">View Online</a>""",
-                attachmentsPattern: 'allure-report.zip',
-                mimeType: 'text/html',
-                to: "${EMAIL_RECIPIENTS}"
-            )
-        }
-
-        unstable {
-            emailext(
-                subject: "⚠️ Selenium Cucumber Tests Unstable | ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """<h2>Tests Failed ⚠️</h2>
-                         <b>Environment:</b> ${params.ENVIRONMENT} <br>
-                         <b>Check Allure for details:</b>
-                         <a href="${env.BUILD_URL}allure">View Report</a>""",
+                         <b>Platform:</b> ${params.PLATFORM}<br>
+                         <b>Environment:</b> ${params.ENVIRONMENT}<br>
+                         <b>Tags Run:</b> ${params.TAGS}<br>
+                         <b>Allure Report:</b> <a href="${env.BUILD_URL}allure">View Results</a>""",
                 attachmentsPattern: 'allure-report.zip',
                 mimeType: 'text/html',
                 to: "${EMAIL_RECIPIENTS}"
@@ -121,10 +116,9 @@ pipeline {
 
         failure {
             emailext(
-                subject: "❌ Selenium Cucumber Tests Failed | ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """<h2>Pipeline Error ❌</h2>
-                         <b>The build crashed before finishing.</b><br>
-                         <a href="${env.BUILD_URL}console">Console Output</a>""",
+                subject: "❌ FAILED: ${env.JOB_NAME} [${params.PLATFORM}] #${env.BUILD_NUMBER}",
+                body: """<h2>Pipeline Failed ❌</h2>
+                         <b>Check Console Output:</b> <a href="${env.BUILD_URL}console">Click here</a>""",
                 to: "${EMAIL_RECIPIENTS}"
             )
         }
