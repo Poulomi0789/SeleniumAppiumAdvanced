@@ -34,18 +34,18 @@ public class Hooks {
         }
         DriverFactory.quitDriver();
     }
-    // @BeforeAll
-    // public static void startAppiumServer() {
-    //     String platform = System.getProperty("platform", "web");
-    //     if (!platform.equalsIgnoreCase("web")) {
-    //         service = new AppiumServiceBuilder()
-    //                 .withAppiumJS(new File("/usr/local/lib/node_modules/appium/build/lib/main.js"))
-    //                 .withIPAddress("127.0.0.1")
-    //                 .usingPort(4723)
-    //                 .build();
-    //         service.start();
-    //     }
-    // }
+//    @BeforeAll
+//    public static void startAppiumServer() {
+//        String platform = System.getProperty("platform");
+//        if (!platform.equalsIgnoreCase("web")) {
+//            service = new AppiumServiceBuilder()
+//                    .withAppiumJS(new File("/usr/local/lib/node_modules/appium/build/lib/main.js"))
+//                    .withIPAddress("127.0.0.1")
+//                    .usingPort(4723)
+//                    .build();
+//            service.start();
+//        }
+//    }
 
     @AfterAll
     public static void stopAppiumServer() {
